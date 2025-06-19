@@ -1,21 +1,14 @@
 "use client"
 
-import type React from "react"
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, Mail, Phone, MessageSquare, Heart } from "lucide-react"
-import { useState } from "react"
+import { useActionState } from "react"
 import Image from "next/image"
+import { submitEmail } from "@/app/actions/submit-email"
 
 export default function BookScreening() {
-  const [email, setEmail] = useState("")
-
-  const handleEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle email submission logic here
-    console.log("Email submitted:", email)
-  }
+  const [state, action, isPending] = useActionState(submitEmail, null)
 
   const handleEmailUs = () => {
     window.location.href = "mailto:support@rbnhealth.com"
@@ -67,28 +60,42 @@ export default function BookScreening() {
 
         {/* Email Form */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-16 max-w-2xl mx-auto">
-          <form onSubmit={handleEmailSubmit} className="space-y-6">
+          <form action={action} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-2">
                 Email Address
               </label>
               <Input
                 id="email"
+                name="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"
                 className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 required
+                disabled={isPending}
               />
             </div>
             <Button
               type="submit"
               className="w-full bg-amber-700 hover:bg-amber-800 text-white py-3 text-lg font-light rounded-lg"
+              disabled={isPending}
             >
-              Get My Cancer Screening Scheduled
+              {isPending ? "Submitting..." : "Get My Cancer Screening Scheduled"}
             </Button>
           </form>
+
+          {/* Success/Error Messages */}
+          {state && (
+            <div
+              className={`mt-4 p-4 rounded-lg ${
+                state.success
+                  ? "bg-green-50 text-green-800 border border-green-200"
+                  : "bg-red-50 text-red-800 border border-red-200"
+              }`}
+            >
+              {state.message}
+            </div>
+          )}
         </div>
 
         {/* Direct Contact Section */}
