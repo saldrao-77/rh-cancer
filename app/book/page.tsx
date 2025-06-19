@@ -75,13 +75,13 @@ export default function BookScreening() {
                 disabled={isPending}
               />
             </div>
-            <Button
+            <button
               type="submit"
-              className="w-full bg-amber-700 hover:bg-amber-800 text-white py-3 text-lg font-light rounded-lg"
+              className="w-full bg-amber-700 hover:bg-amber-800 text-white py-3 text-lg font-light rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               disabled={isPending}
             >
               {isPending ? "Submitting..." : "Get My Cancer Screening Scheduled"}
-            </Button>
+            </button>
           </form>
 
           {/* Success/Error Messages */}
