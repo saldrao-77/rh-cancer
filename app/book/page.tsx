@@ -1,14 +1,46 @@
 "use client"
 
+import type React from "react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ArrowLeft, Mail, Phone, MessageSquare, Heart } from "lucide-react"
-import { useActionState } from "react"
+import { useState } from "react"
 import Image from "next/image"
-import { submitEmail } from "@/app/actions/submit-email"
 
 export default function BookScreening() {
-  const [state, action, isPending] = useActionState(submitEmail, null)
+  const [email, setEmail] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setMessage(null)
+
+    try {
+      const response = await fetch("/api/submit-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setMessage({ type: "success", text: "Thank you! We'll be in touch soon to schedule your screening." })
+        setEmail("")
+      } else {
+        setMessage({ type: "error", text: result.message || "Something went wrong. Please try again." })
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Something went wrong. Please try again." })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const handleEmailUs = () => {
     window.location.href = "mailto:support@rbnhealth.com"
@@ -60,40 +92,41 @@ export default function BookScreening() {
 
         {/* Email Form */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-16 max-w-2xl mx-auto">
-          <form action={action} className="space-y-6">
+          <form onSubmit={handleEmailSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-stone-700 mb-2">
                 Email Address
               </label>
               <Input
                 id="email"
-                name="email"
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email address"
                 className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
                 required
-                disabled={isPending}
+                disabled={isSubmitting}
               />
             </div>
-            <button
+            <Button
               type="submit"
-              className="w-full bg-amber-700 hover:bg-amber-800 text-white py-3 text-lg font-light rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              disabled={isPending}
+              className="w-full bg-amber-700 hover:bg-amber-800 text-white py-3 text-lg font-light rounded-lg"
+              disabled={isSubmitting}
             >
-              {isPending ? "Submitting..." : "Get My Cancer Screening Scheduled"}
-            </button>
+              {isSubmitting ? "Submitting..." : "Get My Cancer Screening Scheduled"}
+            </Button>
           </form>
 
           {/* Success/Error Messages */}
-          {state && (
+          {message && (
             <div
               className={`mt-4 p-4 rounded-lg ${
-                state.success
+                message.type === "success"
                   ? "bg-green-50 text-green-800 border border-green-200"
                   : "bg-red-50 text-red-800 border border-red-200"
               }`}
             >
-              {state.message}
+              {message.text}
             </div>
           )}
         </div>
